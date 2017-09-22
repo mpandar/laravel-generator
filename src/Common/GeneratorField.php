@@ -4,24 +4,24 @@ namespace InfyOm\Generator\Common;
 
 use Illuminate\Support\Str;
 
-class GeneratorField
+class GeneratorField implements \ArrayAccess
 {
-    /** @var string */
+  /** @var string */
     public $name;
     public $dbInput;
     public $htmlInput;
     public $htmlType;
     public $fieldType;
 
-    /** @var array */
+  /** @var array */
     public $htmlValues;
 
-    /** @var string */
+  /** @var string */
     public $migrationText;
     public $foreignKeyText;
     public $validations;
 
-    /** @var bool */
+  /** @var bool */
     public $isSearchable = true;
     public $isFillable = true;
     public $isPrimary = false;
@@ -87,18 +87,18 @@ class GeneratorField
 
         $fieldTypeParams = explode(',', array_shift($inputsArr));
         $this->fieldType = array_shift($fieldTypeParams);
-        $this->migrationText .= $this->fieldType."('".$this->name."'";
+        $this->migrationText .= $this->fieldType . "('" . $this->name . "'";
 
         if ($this->fieldType == 'enum') {
             $this->migrationText .= ', [';
             foreach ($fieldTypeParams as $param) {
-                $this->migrationText .= "'".$param."',";
+                $this->migrationText .= "'" . $param . "',";
             }
             $this->migrationText = substr($this->migrationText, 0, strlen($this->migrationText) - 1);
             $this->migrationText .= ']';
         } else {
             foreach ($fieldTypeParams as $param) {
-                $this->migrationText .= ', '.$param;
+                $this->migrationText .= ', ' . $param;
             }
         }
 
@@ -110,9 +110,9 @@ class GeneratorField
             if ($functionName == 'foreign') {
                 $foreignTable = array_shift($inputParams);
                 $foreignField = array_shift($inputParams);
-                $this->foreignKeyText .= "\$table->foreign('".$this->name."')->references('".$foreignField."')->on('".$foreignTable."');";
+                $this->foreignKeyText .= "\$table->foreign('" . $this->name . "')->references('" . $foreignField . "')->on('" . $foreignTable . "');";
             } else {
-                $this->migrationText .= '->'.$functionName;
+                $this->migrationText .= '->' . $functionName;
                 $this->migrationText .= '(';
                 $this->migrationText .= implode(', ', $inputParams);
                 $this->migrationText .= ')';
@@ -145,5 +145,24 @@ class GeneratorField
         }
 
         return $this->$key;
+    }
+    public function offsetGet($key)
+    {
+        if ($key == 'fieldTitle') {
+            return Str::title(str_replace('_', ' ', $this->name));
+        }
+
+        return isset($this->$key) ? $this->$key : false;
+    }
+
+    public function offsetUnset($key)
+    {
+    }
+    public function offsetSet($key, $value)
+    {
+    }
+    public function offsetExists($key)
+    {
+        return isset($this->$key);
     }
 }
